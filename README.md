@@ -8,7 +8,7 @@ Allt körs i webbläsaren. Inget att bygga, inga npm-paket.
 ## Kom igång (2 minuter)
 
 ```
-git clone https://github.com/<ditt-konto>/wasteland-builder
+git clone https://github.com/connythunders/wasteland-builder
 cd wasteland-builder
 ```
 
