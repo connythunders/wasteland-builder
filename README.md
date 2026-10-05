@@ -24,6 +24,8 @@ cd wasteland-builder
 python start.py
 ```
 
+Online-version (efter att GitHub Pages aktiverats): https://connythunders.github.io/wasteland-builder/
+
 Spelet öppnas i webbläsaren. Tryck **KÖR!** – eller skriv en annan ort i rutan och tryck **Generera värld**.
 Världar sparas i `worlds/` så att de laddas direkt nästa gång.
 
