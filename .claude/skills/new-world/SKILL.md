@@ -16,7 +16,7 @@ description: Skapa en ny spelvariant av Wasteland Builder för en ort (t.ex. "g�
 6. **Valfria extrafiler** (kräver `tools/install-skills.*` och API-nycklar i miljön):
    - Musik: `suno-music`-skillen → stil + text om orten → användaren genererar på suno.com → `assets/audio/music.mp3`.
    - Ljud: `elevenlabs-skill` → `assets/audio/{shoot,explosion,engine,pickup,hit}.mp3`.
-   - Bild: `gemini-imagegen` → `assets/images/title.png` (16:9, ortens siluett i postapokalyptisk stil) och `assets/images/ground.png` (sömlös sandstruktur).
+   - Bild: `gemini-imagegen` → `assets/images/title.png` (16:9, ortens siluett i postapokalyptisk stil).
 7. **Testa:** starta spelet, välj världen, kör en runda. Rapportera vad som genererats och vilka filer som ändrats.
 
 Håll det enkelt: användaren ska aldrig behöva redigera kod för att byta ort.

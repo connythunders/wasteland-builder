@@ -27,11 +27,12 @@ blender --background --python tools/blender_build.py -- worlds/falun/world.json 
 ## Arkitektur
 
 - `game/osm.js` – geokodning (Nominatim) + Overpass → `world.json`. Används av både webbläsaren och Node-CLI:t.
-- `game/main.js` – scen, bil, fiender, vågor, pickups, minikarta. `game/audio.js` – ljud.
+- `game/main.js` – världen, fysik (drift), vapen, fiender, vågor, kamera, HUD, meny och garage.
+- `game/buildings.js` (hus efter OSM-taggar), `roads.js` (ytor, markeringar, lyktor, gatunamn), `props.js` (vrak, tunnor, betongsuggor), `fx.js` (rök, eld, explosioner), `vehicles.js` (tre bilar), `textures.js` (procedurella texturer), `audio.js` (valfritt ljud).
 - `worlds/<slug>/world.json` – genererade världar (meter, +x öst, +z syd). `worlds/index.json` listar dem.
 - `assets/` – valfria filer som spelet hittar själv:
   - `assets/audio/{music,engine,shoot,explosion,pickup,hit}.{mp3,wav,ogg}` – annars syntetiskt ljud.
-  - `assets/images/title.png` (menybakgrund) och `assets/images/ground.png` (sömlös markstruktur).
+  - `assets/images/title.png` – konceptbild som läggs över menyns bakgrund (annars en ritad kvällssiluett).
 - `tools/` – CLI, Blender-export, skill-installation.
 
 ## Skills (bild, ElevenLabs, Suno)

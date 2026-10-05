@@ -29,19 +29,23 @@ export async function geocode(place) {
 
 async function overpass(query, onStatus) {
   let lastErr;
-  for (const ep of OVERPASS) {
-    try {
-      onStatus?.(`Hämtar kartdata från ${new URL(ep).host} …`);
-      const r = await fetch(ep, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'data=' + encodeURIComponent(query),
-      });
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      return await r.json();
-    } catch (e) { lastErr = e; }
+  for (let round = 0; round < 4; round++) {
+    if (round) await new Promise((r) => setTimeout(r, 3000 * round));
+    for (const ep of round % 2 ? [OVERPASS[0]] : OVERPASS) {
+      const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), ep === OVERPASS[0] ? 45000 : 15000);
+      try {
+        onStatus?.(`Hämtar kartdata från ${new URL(ep).host} …${round ? ` (försök ${round + 1})` : ''}`);
+        const r = await fetch(ep, {
+          method: 'POST', signal: ctl.signal,
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'data=' + encodeURIComponent(query),
+        });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return await r.json();
+      } catch (e) { lastErr = e.name === 'AbortError' ? new Error('timeout') : e; } finally { clearTimeout(timer); }
+    }
   }
-  throw new Error('Overpass-servrarna svarade inte: ' + lastErr);
+  throw new Error('Kartservrarna (Overpass) är överbelastade just nu, försök igen om en stund. (' + lastErr + ')');
 }
 
 function buildQuery(lat, lon, r) {
@@ -54,6 +58,8 @@ way["waterway"~"^(river|stream|canal)$"]${a};
 way["natural"~"^(water|wood|scrub|grassland|wetland|beach)$"]${a};
 way["landuse"~"^(forest|grass|meadow|farmland|orchard|cemetery|recreation_ground|allotments|village_green)$"]${a};
 way["leisure"~"^(park|pitch|golf_course|garden)$"]${a};
+way["man_made"="pier"]${a};
+node["natural"="tree"]${a};
 relation["natural"~"^(water|wood)$"]${a};
 relation["landuse"~"^(forest|meadow|farmland)$"]${a};
 );out geom;`;
@@ -151,7 +157,7 @@ export function convert(osm, center, radius) {
   const kx = Math.cos((center.lat * Math.PI) / 180) * 111320, kz = 110540;
   const proj = (g) => [round1((g.lon - center.lon) * kx), round1(-(g.lat - center.lat) * kz)];
   const E = radius * 1.15;
-  const world = { buildings: [], roads: [], rails: [], water: [], rivers: [], green: [] };
+  const world = { buildings: [], roads: [], rails: [], piers: [], trees: [], water: [], rivers: [], green: [] };
 
   const addPoly = (list, ring, holes, extra) => {
     const c = clipSquare(ring, E);
@@ -171,6 +177,12 @@ export function convert(osm, center, radius) {
 
   for (const el of osm.elements) {
     const t = el.tags || {};
+    if (el.type === "node") {
+      if (t.natural === "tree" && world.trees.length < 1500) {
+        const q = proj(el); if (Math.abs(q[0]) < E && Math.abs(q[1]) < E) world.trees.push(q);
+      }
+      continue;
+    }
     if (el.type === 'way' && el.geometry) {
       let p = el.geometry.map(proj);
       const closed = p.length > 3 && same(p[0], p[p.length - 1]);
@@ -179,10 +191,22 @@ export function convert(osm, center, radius) {
         if (!closed || p.length < 3 || Math.abs(area(p)) < 6) continue;
         if (p.every((q) => Math.abs(q[0]) > E || Math.abs(q[1]) > E)) continue;
         const c = clipSquare(p, E); if (!c) continue;
-        world.buildings.push({ h: round1(buildingHeight(t, el.id)), p: c });
+        const lv = parseFloat(t["building:levels"]);
+        world.buildings.push({
+          h: round1(buildingHeight(t, el.id)), p: c,
+          ...(t.building !== "yes" ? { k: t.building } : {}),
+          ...(t["roof:shape"] ? { rs: t["roof:shape"] } : {}),
+          ...(t["roof:colour"] ? { rc: t["roof:colour"] } : {}),
+          ...(t["building:colour"] || t.colour ? { c: t["building:colour"] || t.colour } : {}),
+          ...(t["building:material"] ? { m: t["building:material"] } : {}),
+          ...(lv > 0 ? { lv } : {}),
+          ...(t.name ? { n: t.name } : {}),
+        });
       } else if (t.highway) {
         const w = ROAD_W[t.highway]; if (!w) continue;
-        for (const run of clipLine(el.geometry.map(proj), E)) world.roads.push({ t: t.highway, w, p: run, ...(t.name ? { n: t.name } : {}) });
+        for (const run of clipLine(el.geometry.map(proj), E)) world.roads.push({ t: t.highway, w, p: run, ...(t.name ? { n: t.name } : {}), ...(t.surface ? { s: t.surface } : {}) });
+      } else if (t.man_made === "pier") {
+        for (const run of clipLine(el.geometry.map(proj), E)) world.piers.push({ w: parseFloat(t.width) || 3.5, p: run, ...(t.name ? { n: t.name } : {}) });
       } else if (t.railway) {
         for (const run of clipLine(el.geometry.map(proj), E)) world.rails.push({ w: 2.6, p: run });
       } else if (t.waterway) {

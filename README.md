@@ -38,11 +38,17 @@ Genväg: `.\start.ps1 "Falun"` / `python start.py "Falun"` genererar Falun direk
 | | |
 |---|---|
 | W A S D / pilar | Kör |
-| Mellanslag / musknapp | Skjut |
+| F / musknapp | Skjut valt vapen |
+| 1–4 eller E | Kulsprutor · raketer · eldkastare · minor (4 + F lägger en mina) |
 | Skift | Nitro |
-| R | Starta om · Esc: meny |
+| Mellanslag | Drift |
+| C / Q | Byt kamera / titta bakåt |
+| R | Återställ bilen på en fri gata (efter skrotning: kör igen) |
+| Tab | Stor karta · Esc: paus |
 
-Plocka upp lådor: **gul** = ammo, **vit/röd** = reparation, **blå** = nitro. Vatten är giftigt och bromsar. Var 6:e fiende är en tung "brute".
+**Gatukrig:** tre vågor med raiders, hundar och en War Rig som skjuter granater. **Fri körning:** inga fiender, utforska staden.
+Tre fordon: *Interceptor* (snabb), *Rust Hound* (balanserad) och *War Rig* (pansar). Plocka upp lådor: **vit/röd** = pansar, **gul** = raketer, minor och eldkastarbränsle, **blå** = nitro.
+Vatten skadar och bromsar. Kullersten, grus och asfalt följer kartans `surface`-taggar.
 
 ## Låt Claude Code eller Codex göra variationerna
 
@@ -65,7 +71,7 @@ sh tools/install-skills.sh        # macOS / Linux
 
 | Skill | Repo | Används till | Nyckel |
 |---|---|---|---|
-| Bild (`gemini-imagegen`) | [claude-code-imagegen-skill](https://github.com/fltman/claude-code-imagegen-skill) | `assets/images/title.png`, `ground.png` | `OPENROUTER_API_KEY` |
+| Bild (`gemini-imagegen`) | [claude-code-imagegen-skill](https://github.com/fltman/claude-code-imagegen-skill) | `assets/images/title.png` | `OPENROUTER_API_KEY` |
 | ElevenLabs | [claude-code-elevenlabs-dialogue-skill](https://github.com/fltman/claude-code-elevenlabs-dialogue-skill) | ljud och röster i `assets/audio/` | `ELEVENLABS_API_KEY` |
 | Suno | [claude-code-suno-musicgen-skill](https://github.com/fltman/claude-code-suno-musicgen-skill) | `assets/audio/music.mp3` | – (skriver prompt, du genererar på suno.com) |
 
@@ -74,10 +80,10 @@ Sätt nycklarna som miljövariabler, inte i chatten. Filer som spelet hittar aut
 ```
 assets/audio/music | engine | shoot | explosion | pickup | hit   (.mp3 / .wav / .ogg)
 assets/images/title.png    menybakgrund
-assets/images/ground.png   sömlös markstruktur
+# (marken, husen och fordonen ritas i kod – inga bildfiler behövs)
 ```
 
-Saknas en fil används syntetiskt ljud och enfärgad mark.
+Saknas en fil används syntetiskt ljud och en ritad menybakgrund.
 
 ## Anpassa själv
 
@@ -95,9 +101,7 @@ blender --background --python tools/blender_build.py -- worlds/rattvik/world.jso
 
 ## Hur det fungerar
 
-`game/osm.js` frågar Nominatim efter orten och Overpass efter kartobjekt, projicerar till meter runt centrum
-och skriver `world.json`. `game/main.js` extruderar byggnader (30 % blir ruiner), lägger ut vägar och vatten,
-strör döda träd över skogsytor och kör fysik, fiender och vågor. Se [CLAUDE.md](CLAUDE.md) för detaljer.
+`game/osm.js` frågar Nominatim efter orten och Overpass efter kartobjekt (byggnader med typ, våningar, taktyp och färg, vägar med yta och namn, vatten, skog, träd, pirar) och skriver `world.json`. Spelet bygger sedan husen efter taggarna – falu-röda träkåkar, putsade flerbostadshus, sadel- och valmade tak, kyrktorn – och faller tillbaka på lokala stilar där kartan saknar uppgifter. Byggnader, texturer, fordon och effekter är ritade i kod, utan bildfiler. Se [CLAUDE.md](CLAUDE.md) för detaljer.
 
 ## Licens och data
 

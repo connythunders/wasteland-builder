@@ -6,65 +6,85 @@
 <title>Wasteland Builder</title>
 <link rel="stylesheet" href="style.css">
 <script type="importmap">
-{ "imports": {
-  "three": "./vendor/three.module.js",
-  "three/addons/": "./vendor/"
-} }
+{ "imports": { "three": "./vendor/three.module.js", "three/addons/": "./vendor/" } }
 </script>
 </head>
 <body>
 <canvas id="view"></canvas>
+<div id="grain"></div>
+<div id="hitflash"></div>
 
+<!-- ============ HUD ============ -->
 <div id="hud" hidden>
-  <div class="bars">
-    <label>Skrov<div class="bar"><i id="b-hp"></i></div></label>
-    <label>Ammo<div class="bar"><i id="b-ammo"></i></div></label>
-    <label>Nitro<div class="bar"><i id="b-nitro"></i></div></label>
+  <div class="tl">
+    <div class="logo">R / W</div>
+    <div class="chip" id="h-street">RÄTTVIK</div>
+    <div class="wavebox"><small>GATUKRIG</small><b id="h-wave">VÅG 01 / 03</b><small id="h-remain">Förbered dig</small></div>
   </div>
-  <div class="score"><b id="h-score">0</b><span id="h-wave">Våg 1</span></div>
-  <div class="speed"><b id="h-speed">0</b> km/h</div>
-  <canvas id="mini" width="200" height="200"></canvas>
-  <div id="h-street"></div>
+  <div class="tr">
+    <button id="b-respawn">ÅTERSTÄLL</button><button id="b-view">VY</button><button id="b-map">KARTA</button><button id="b-pause">II</button>
+  </div>
   <div id="banner"></div>
+  <div id="markers"></div>
+  <canvas id="mini" width="200" height="200"></canvas>
+  <div class="panel bl">
+    <div class="row"><span>PANSAR</span><b id="v-hp">100%</b></div><div class="bar"><i id="b-hp"></i></div>
+    <div class="row"><span>NITRO</span><b id="v-nitro">100%</b></div><div class="bar blue"><i id="b-nitro"></i></div>
+    <div class="row gun"><span>TVILLINGKULSPRUTA</span><b id="h-gun">REDO</b></div>
+  </div>
+  <div id="weapons">
+    <button><kbd>1</kbd>KULSPRUTA</button><button><kbd>2</kbd>RAKETER <i>8</i></button><button><kbd>3</kbd>ELDKASTARE <i>100%</i></button><button><kbd>4</kbd>MINOR <i>6</i></button>
+    <span class="fire">F · ELD</span>
+  </div>
+  <div class="br"><small id="h-vehicle">INTERCEPTOR / 07</small><div class="speed"><b id="h-speed">000</b><span>KM/H</span></div><small>SKROT <b id="h-scrap">0</b></small></div>
+  <div class="keys"><kbd>C</kbd> KAMERA <kbd>Q</kbd> TITTA BAKÅT <kbd>R</kbd> ÅTERSTÄLL <kbd>TAB</kbd> KARTA <kbd>ESC</kbd> PAUS</div>
+  <div id="bigwrap" hidden><canvas id="bigmap" width="720" height="720"></canvas></div>
 </div>
 
+<!-- ============ Menu ============ -->
 <div id="menu">
-  <div class="card">
-    <h1 id="m-title">WASTELAND BUILDER</h1>
-    <p id="m-tag" class="tag">Skriv en ort. Få en död värld att köra sönder i.</p>
+  <canvas id="backdrop"></canvas>
+  <div class="inner">
+    <header><div class="logo">R / W <small>BATTLECARS</small></div></header>
+    <p class="eyebrow" id="m-tag">GATORNA ÄR DINA. BEHÅLL DEM.</p>
+    <h1><span id="m-title1">RÄTTVIK</span><span id="m-title2" class="gold">WASTELAND</span></h1>
+    <p class="sub" id="m-sub">Gamla stan. Nya regler.</p>
+    <nav id="tabs"><button data-m="war" class="on"><em>01</em> GATUKRIG</button><button data-m="roam"><em>02</em> FRI KÖRNING</button></nav>
+    <p class="desc" id="m-desc"></p>
+    <button id="play" class="cta" disabled><span>LADDAR …</span><i>↗</i></button>
 
-    <div class="gen">
-      <input id="place" type="text" value="Rättvik" placeholder="Ort, t.ex. Falun, Visby, Kiruna …" spellcheck="false">
-      <select id="radius" title="Hur stort område">
-        <option value="450">Liten (450 m)</option>
-        <option value="700" selected>Mellan (700 m)</option>
-        <option value="1000">Stor (1000 m)</option>
-      </select>
-      <button id="gen">Generera värld</button>
-    </div>
-    <div id="status"></div>
+    <section class="garage">
+      <canvas id="garage-cv"></canvas>
+      <div id="garage-list"></div>
+    </section>
 
-    <div id="saved"></div>
+    <div class="keyline"><kbd>WASD</kbd> KÖR <kbd>F</kbd> ELD <kbd>1–4</kbd> VAPEN <kbd>SKIFT</kbd> NITRO <kbd>MELLANSLAG</kbd> DRIFT</div>
 
-    <button id="play" class="big" disabled>Ladda …</button>
-
-    <table class="keys">
-      <tr><td>W A S D / pilar</td><td>Kör</td></tr>
-      <tr><td>Mellanslag / musknapp</td><td>Skjut</td></tr>
-      <tr><td>Skift</td><td>Nitro</td></tr>
-      <tr><td>R</td><td>Starta om</td></tr>
-    </table>
-    <p class="small">Kartdata © OpenStreetMap contributors (ODbL).</p>
+    <details id="builder">
+      <summary>Byt ort · bygg en ny värld av vilken plats som helst</summary>
+      <div class="gen">
+        <input id="place" type="text" value="Rättvik" placeholder="Ort, t.ex. Falun, Visby, Kiruna …" spellcheck="false">
+        <select id="radius"><option value="450">Liten (450 m)</option><option value="700" selected>Mellan (700 m)</option><option value="1000">Stor (1000 m)</option></select>
+        <button id="gen">GENERERA VÄRLD</button>
+      </div>
+      <div id="status"></div><div id="saved"></div>
+      <p class="small">Kartdata © OpenStreetMap contributors (ODbL).</p>
+    </details>
   </div>
 </div>
 
-<div id="over" hidden>
-  <div class="card">
-    <h1>SKROTAD</h1>
-    <p id="o-text"></p>
-    <button id="again" class="big">Kör igen (R)</button>
-  </div>
-</div>
+<!-- ============ Overlays ============ -->
+<div id="pause" class="overlay" hidden><div class="card">
+  <small>MOTORN GÅR PÅ TOMGÅNG</small><h2>TA ETT ANDETAG.</h2>
+  <p>WASD / pilar: kör · F / klick: eld<br>1–4 / E: välj vapen · 4 + F lägger en mina<br>Skift: nitro · Mellanslag: drift · C: kamera<br>Tab: karta · R: återställ på en fri gata</p>
+  <button id="resume" class="cta"><span>TILLBAKA TILL GATORNA</span><i>↗</i></button>
+  <button id="to-menu" class="link">BYT FORDON / TILLBAKA TILL GARAGET</button>
+</div></div>
+<div id="over" class="overlay" hidden><div class="card"><small>MOTORN ÄR DÖD</small><h2>SKROTAD.</h2><p id="o-text"></p>
+  <button id="again" class="cta"><span>KÖR IGEN</span><i>↗</i></button><button id="to-menu2" class="link">TILLBAKA TILL GARAGET</button></div></div>
+<div id="win" class="overlay" hidden><div class="card"><small>SISTA RAIDERN ÄR SKROTAD</small><h2 class="gold">STADEN ÄR DIN.</h2><p id="w-text"></p>
+  <button id="again2" class="cta"><span>NYTT SLAG</span><i>↗</i></button><button id="to-menu3" class="link">TILLBAKA TILL GARAGET</button></div></div>
+<div id="loading" class="overlay"><div class="card"><small id="load-text">FÖRBEREDER GATORNA</small><div class="loadbar"><i></i></div></div></div>
 
 <script type="module" src="main.js"></script>
 </body>
