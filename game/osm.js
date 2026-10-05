@@ -182,7 +182,7 @@ export function convert(osm, center, radius) {
         world.buildings.push({ h: round1(buildingHeight(t, el.id)), p: c });
       } else if (t.highway) {
         const w = ROAD_W[t.highway]; if (!w) continue;
-        for (const run of clipLine(el.geometry.map(proj), E)) world.roads.push({ t: t.highway, w, p: run });
+        for (const run of clipLine(el.geometry.map(proj), E)) world.roads.push({ t: t.highway, w, p: run, ...(t.name ? { n: t.name } : {}) });
       } else if (t.railway) {
         for (const run of clipLine(el.geometry.map(proj), E)) world.rails.push({ w: 2.6, p: run });
       } else if (t.waterway) {

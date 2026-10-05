@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/BufferGeometryUtils.js';
 import { generateWorld, slugify } from './osm.js';
 import { Sfx } from './audio.js';
+import { buildBuildings } from './buildings.js';
+import { buildRoads, roadNameAt } from './roads.js';
 
 const $ = (s) => document.querySelector(s);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -10,7 +12,8 @@ const rnd = (a, b) => a + Math.random() * (b - a);
 
 // ---------------------------------------------------------------- config
 const DEFAULT_PALETTE = {
-  sky: '#d98c4f', fog: '#c98a58', ground: '#b48a56', building: '#b39068', roof: '#7d6248',
+  sky: '#d98c4f', fog: '#c98a58', ground: '#b48a56', building: '#b39068', roof: '#6e5a4a', pave: '#a89c84',
+  walls: ['#c9a15a', '#d8c79a', '#d9d3c2', '#8c3b2a', '#d4b04a', '#c99a8a', '#b8b09a'],
   road: '#3a3532', track: '#7d6242', rail: '#2a2623', water: '#56612f', forest: '#4a4426',
   field: '#a68b50', scrub: '#8d7a45', park: '#8a8248', sand: '#cfa66a', tree: '#3f3a20',
   player: '#d4651f', buggy: '#c9b23a', brute: '#4b4744',
@@ -119,35 +122,11 @@ function buildWorld(w) {
   if (wg.length) g.add(new THREE.Mesh(mergeGeometries(wg), new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide, emissive: 0x1a2008 })));
   if (w.rivers?.length) g.add(new THREE.Mesh(ribbon(w.rivers, 0.045, () => new THREE.Color(P.water)), new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide })));
 
-  // roads + rails
-  const roadCol = (l) => new THREE.Color(l.t === 'track' || l.t === 'service' ? P.track : P.road);
-  const rm = new THREE.Mesh(ribbon(w.roads || [], 0.06, roadCol), new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide }));
-  rm.receiveShadow = true; g.add(rm);
-  if (w.rails?.length) g.add(new THREE.Mesh(ribbon(w.rails, 0.07, () => new THREE.Color(P.rail)), new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide })));
+  // roads: marked asphalt, pavements, junctions, lamps, rails (see roads.js)
+  g.add(...buildRoads(w, P));
 
-  // buildings (some are collapsed ruins)
-  const bGeos = [], roofC = new THREE.Color(P.roof), wallC = new THREE.Color(P.building);
-  w.buildings.forEach((b, i) => {
-    const rr = mulberry(i * 977 + 13);
-    b.ruin = rr() < 0.3; const h = b.ruin ? b.h * (0.35 + rr() * 0.4) : b.h;
-    const geo = new THREE.ExtrudeGeometry(shapeOf(b.p), { depth: h, bevelEnabled: false });
-    geo.rotateX(-Math.PI / 2);
-    const v = 0.78 + rr() * 0.4, nrm = geo.attributes.normal, n = nrm.count, col = new Float32Array(n * 3);
-    for (let k = 0; k < n; k++) {
-      const c = nrm.getY(k) > 0.5 ? roofC : wallC, s = nrm.getY(k) > 0.5 ? v : v * (1 - 0.12 * (k % 3));
-      col[k * 3] = c.r * s; col[k * 3 + 1] = c.g * s; col[k * 3 + 2] = c.b * s;
-    }
-    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
-    geo.deleteAttribute('uv');
-    bGeos.push(geo);
-    let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
-    for (const [x, z] of b.p) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); z0 = Math.min(z0, z); z1 = Math.max(z1, z); }
-    b.bb = [x0, x1, z0, z1];
-  });
-  if (bGeos.length) {
-    const bm = new THREE.Mesh(mergeGeometries(bGeos), new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true }));
-    bm.castShadow = bm.receiveShadow = true; g.add(bm);
-  }
+  // buildings: textured walls, pitched roofs, hollow ruins (see buildings.js)
+  g.add(...buildBuildings(w, P, mulberry));
 
   // collision grid
   grid = new Map();
@@ -322,6 +301,7 @@ function updatePuffs(dt) {
 let state = 'menu', shake = 0, camPos = new THREE.Vector3(), camInit = false;
 let player, enemies = [], pickups = [];
 let score = 0, wave = 0, waveQueue = 0, waveTimer = 0, spawnT = 0, fireT = 0, gunSide = 1, ramCd = 0, hitCd = 0, bannerT = 0;
+let streetT = 0;
 const keys = new Set(); let mouseDown = false;
 
 function setBanner(t, secs = 2) { const b = $('#banner'); b.textContent = t; b.classList.add('on'); bannerT = secs; }
@@ -528,6 +508,7 @@ function drawMini() {
 
 const hud = { hp: $('#b-hp'), ammo: $('#b-ammo'), nitro: $('#b-nitro'), score: $('#h-score'), speed: $('#h-speed') };
 function updateHud() {
+  streetT -= 0.016; if (streetT <= 0) { streetT = 0.3; $('#h-street').textContent = roadNameAt(world, player.x, player.z); }
   hud.hp.style.width = (player.hp / player.max) * 100 + '%';
   hud.hp.style.background = player.hp < 30 ? '#d83a2a' : '#6ac04a';
   hud.ammo.style.width = (player.ammo / 300) * 100 + '%'; hud.nitro.style.width = player.nitro + '%';
@@ -649,4 +630,4 @@ $('#again').onclick = () => { state = 'playing'; player.mesh.visible = true; res
 })();
 
 // Debug / test hook: advance the simulation without requestAnimationFrame.
-window.__wb = { step(n = 1, dt = 1 / 30) { for (let i = 0; i < n; i++) tick(dt); }, keys, get info() { return { state, wave, score, enemies: enemies.length, hp: player?.hp, v: player?.v, x: player?.x, z: player?.z }; } };
+window.__wb = { sfx, step(n = 1, dt = 1 / 30) { for (let i = 0; i < n; i++) tick(dt); }, keys, get info() { return { state, wave, score, enemies: enemies.length, hp: player?.hp, v: player?.v, x: player?.x, z: player?.z }; } };
