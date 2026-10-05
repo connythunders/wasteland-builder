@@ -1,0 +1,20 @@
+{
+  "place": "Rättvik, Dalarna, Sverige",
+  "slug": "rattvik",
+  "radius": 700,
+  "title": "Rättvik Wasteland",
+  "tagline": "Siljan är giftig, bensinen är slut och långbryggan bär inte längre. Dalarna tillhör den som tankar sist.",
+  "palette": {
+    "sky": "#d98c4f",
+    "fog": "#c98a58",
+    "ground": "#b48a56",
+    "water": "#56612f",
+    "building": "#b39068",
+    "roof": "#7d6248",
+    "road": "#3a3532",
+    "forest": "#4a4426",
+    "player": "#d4651f",
+    "buggy": "#c9b23a",
+    "brute": "#4b4744"
+  }
+}

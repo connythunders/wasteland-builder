@@ -1,0 +1,9 @@
+node_modules/
+out/
+*.blend1
+.DS_Store
+# skills installeras per användare via tools/install-skills.*
+.claude/skills/*
+!.claude/skills/new-world/
+.claude/agents/
+.claude/settings.local.json

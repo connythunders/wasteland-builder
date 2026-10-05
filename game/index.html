@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wasteland Builder</title>
+<link rel="stylesheet" href="style.css">
+<script type="importmap">
+{ "imports": {
+  "three": "./vendor/three.module.js",
+  "three/addons/": "./vendor/"
+} }
+</script>
+</head>
+<body>
+<canvas id="view"></canvas>
+
+<div id="hud" hidden>
+  <div class="bars">
+    <label>Skrov<div class="bar"><i id="b-hp"></i></div></label>
+    <label>Ammo<div class="bar"><i id="b-ammo"></i></div></label>
+    <label>Nitro<div class="bar"><i id="b-nitro"></i></div></label>
+  </div>
+  <div class="score"><b id="h-score">0</b><span id="h-wave">Våg 1</span></div>
+  <div class="speed"><b id="h-speed">0</b> km/h</div>
+  <canvas id="mini" width="200" height="200"></canvas>
+  <div id="banner"></div>
+</div>
+
+<div id="menu">
+  <div class="card">
+    <h1 id="m-title">WASTELAND BUILDER</h1>
+    <p id="m-tag" class="tag">Skriv en ort. Få en död värld att köra sönder i.</p>
+
+    <div class="gen">
+      <input id="place" type="text" value="Rättvik" placeholder="Ort, t.ex. Falun, Visby, Kiruna …" spellcheck="false">
+      <select id="radius" title="Hur stort område">
+        <option value="450">Liten (450 m)</option>
+        <option value="700" selected>Mellan (700 m)</option>
+        <option value="1000">Stor (1000 m)</option>
+      </select>
+      <button id="gen">Generera värld</button>
+    </div>
+    <div id="status"></div>
+
+    <div id="saved"></div>
+
+    <button id="play" class="big" disabled>Ladda …</button>
+
+    <table class="keys">
+      <tr><td>W A S D / pilar</td><td>Kör</td></tr>
+      <tr><td>Mellanslag / musknapp</td><td>Skjut</td></tr>
+      <tr><td>Skift</td><td>Nitro</td></tr>
+      <tr><td>R</td><td>Starta om</td></tr>
+    </table>
+    <p class="small">Kartdata © OpenStreetMap contributors (ODbL).</p>
+  </div>
+</div>
+
+<div id="over" hidden>
+  <div class="card">
+    <h1>SKROTAD</h1>
+    <p id="o-text"></p>
+    <button id="again" class="big">Kör igen (R)</button>
+  </div>
+</div>
+
+<script type="module" src="main.js"></script>
+</body>
+</html>

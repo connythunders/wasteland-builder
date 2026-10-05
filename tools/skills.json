@@ -1,0 +1,8 @@
+{
+  "_comment": "Public skill repos by fltman. install-skills.* clones them and copies skills/ and agents/ into .claude/ (they are not vendored here).",
+  "repos": [
+    { "name": "image",      "url": "https://github.com/fltman/claude-code-imagegen-skill",           "needs": "OPENROUTER_API_KEY" },
+    { "name": "elevenlabs", "url": "https://github.com/fltman/claude-code-elevenlabs-dialogue-skill", "needs": "ELEVENLABS_API_KEY" },
+    { "name": "suno",       "url": "https://github.com/fltman/claude-code-suno-musicgen-skill",       "needs": "(none – prompts only)" }
+  ]
+}
