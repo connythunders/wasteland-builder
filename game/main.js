@@ -362,7 +362,7 @@ function resetGame() {
   G.state = 'playing'; $('#over').hidden = true; $('#win').hidden = true; $('#pause').hidden = true;
   $('#h-vehicle').textContent = `${spec.name} / ${spec.no}`;
   banner(G.mode === 'war' ? 'RÄTTVIK ÄR DITT ATT FÖRSVARA' : 'FRI KÖRNING', 2.4);
-  $('#h-wave').textContent = G.mode === 'war' ? `VÅG 00 / ${two(G.waves)}` : 'FRI KÖRNING';
+  $('#h-wave').textContent = G.mode === 'war' ? `VÅG 00 / ${two(G.waves)}` : 'UTFORSKA STADEN';
   $('#h-remain').textContent = G.mode === 'war' ? 'Förbered dig' : 'Inga raiders';
   document.querySelector('.wavebox small').textContent = G.mode === 'war' ? 'GATUKRIG' : 'FRI KÖRNING';
 }
